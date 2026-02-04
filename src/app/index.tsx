@@ -18,6 +18,14 @@ interface FeedItem {
 
 const RSS_URL = "https://expo.dev/changelog/rss.xml";
 
+function getFetchUrl(): string {
+  // Use CORS proxy on web since the RSS feed doesn't have CORS headers
+  if (process.env.EXPO_OS === "web") {
+    return `https://api.allorigins.win/raw?url=${encodeURIComponent(RSS_URL)}`;
+  }
+  return RSS_URL;
+}
+
 function parseRss(xml: string): FeedItem[] {
   const items: FeedItem[] = [];
   const itemRegex = /<item>([\s\S]*?)<\/item>/g;
@@ -70,7 +78,7 @@ export default function IndexRoute() {
   const fetchRss = useCallback(async () => {
     try {
       setError(null);
-      const response = await fetch(RSS_URL);
+      const response = await fetch(getFetchUrl());
       const xml = await response.text();
       const parsedItems = parseRss(xml);
       setItems(parsedItems);
